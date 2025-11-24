@@ -1,11 +1,6 @@
-import pickle 
-import numpy as np 
+import pickle
+import numpy as np
 import streamlit as st
-
-
-
-# Open Pickle file
-
 
 st.title("Heart Disease Prediction Using Machine Learning")
 st.image('https://thumbs.dreamstime.com/b/experience-essence-life-vivid-d-human-heart-pulsating-dynamic-ekg-line-perfect-medical-health-395635056.jpg')
@@ -24,7 +19,6 @@ page_bg = """
 </style>
 """
 st.markdown(page_bg, unsafe_allow_html=True)
-
 
 # Sidebar Content
 st.sidebar.title("Input Parameters")
@@ -85,22 +79,60 @@ thal = st.sidebar.radio(
 
 st.subheader("Predicted Output")
 
-with open('heart_disease_prediction.pkl','rb') as f:
-    model = pickle.load(f)
+# Robust model loading
+def load_model(pkl_path):
+    with open(pkl_path, 'rb') as f:
+        loaded = pickle.load(f)
+    # If it's a dict/tuple try to locate the estimator
+    if hasattr(loaded, "predict"):
+        return loaded
+    if isinstance(loaded, dict):
+        # common keys that might store the estimator
+        for key in ("model", "estimator", "pipeline", "clf"):
+            if key in loaded and hasattr(loaded[key], "predict"):
+                return loaded[key]
+        # sometimes sklearn pipeline stored under 'pipeline' or 'pipe'
+        for key in loaded:
+            if hasattr(loaded[key], "predict"):
+                return loaded[key]
+    if isinstance(loaded, (list, tuple)):
+        # try to find first element with predict
+        for item in loaded:
+            if hasattr(item, "predict"):
+                return item
+    # nothing found
+    return loaded
+
+try:
+    model = load_model('heart_disease_prediction.pkl')
+except FileNotFoundError:
+    st.error("Pickle file 'heart_disease_prediction.pkl' not found. Put it in the same directory as this script.")
+    model = None
+except Exception as e:
+    st.error(f"Error loading model pickle: {e}")
+    model = None
 
 if st.sidebar.button("Predict"):
-    data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
-                      thalach, exang, oldpeak, slope, ca, thal]])
-
-    with st.spinner("Predicting..."):
-        prediction = model.predict(data)[0]
-
-    if prediction == 0:
-        st.success("✔️🎉 No Heart Disease Detected ❤️💚")
+    # prepare input
+    data1 = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
+                       thalach, exang, oldpeak, slope, ca, thal]])
+    if model is None:
+        st.error("Model is not loaded. Prediction is not possible.")
     else:
-        st.error(" ⚠️ Heart Disease Detected 💔🩺")
+        # check that model has predict
+        if not hasattr(model, "predict"):
+            st.error("Loaded object does not appear to be a model/pipeline with a .predict() method. "
+                     "Check the contents of 'heart_disease_prediction.pkl'.")
+        else:
+            try:
+                with st.spinner("Predicting..."):
+                    prediction = model.predict(data1)[0]
+                if int(prediction) == 0:
+                    st.success("✔️🎉 No Heart Disease Detected ❤️💚")
+                else:
+                    st.error("⚠️ Heart Disease Detected 💔🩺")
+            except Exception as e:
+                st.error(f"Prediction failed: {e}")
 
 st.write("---")
 st.write("Developed by **Ankit Kumar Maurya**")
-
-
