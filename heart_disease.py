@@ -6,9 +6,6 @@ import streamlit as st
 
 # Open Pickle file
 
-with open('heart_disease_prediction.pkl','rb') as f:
-    model = pickle.load(f)
-
 
 st.title("Heart Disease Prediction Using Machine Learning")
 st.image('https://thumbs.dreamstime.com/b/experience-essence-life-vivid-d-human-heart-pulsating-dynamic-ekg-line-perfect-medical-health-395635056.jpg')
@@ -88,6 +85,9 @@ thal = st.sidebar.radio(
 
 st.subheader("Predicted Output")
 
+with open('heart_disease_prediction.pkl','rb') as f:
+    model = pickle.load(f)
+
 if st.sidebar.button("Predict"):
     data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
                       thalach, exang, oldpeak, slope, ca, thal]])
@@ -102,4 +102,5 @@ if st.sidebar.button("Predict"):
 
 st.write("---")
 st.write("Developed by **Ankit Kumar Maurya**")
+
 
