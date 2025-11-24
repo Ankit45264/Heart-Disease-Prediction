@@ -7,7 +7,7 @@ import streamlit as st
 # Open Pickle file
 
 with open('heart_disease_prediction.pkl','rb') as f:
-    data = pickle.load(f)
+    model = pickle.load(f)
 
 
 st.title("Heart Disease Prediction Using Machine Learning")
@@ -89,11 +89,11 @@ thal = st.sidebar.radio(
 st.subheader("Predicted Output")
 
 if st.sidebar.button("Predict"):
-    data1 = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
+    data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
                       thalach, exang, oldpeak, slope, ca, thal]])
 
     with st.spinner("Predicting..."):
-        prediction = data.predict(data1)[0]
+        prediction = model.predict(data)[0]
 
     if prediction == 0:
         st.success("✔️🎉 No Heart Disease Detected ❤️💚")
@@ -102,3 +102,4 @@ if st.sidebar.button("Predict"):
 
 st.write("---")
 st.write("Developed by **Ankit Kumar Maurya**")
+
